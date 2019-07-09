@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#define N 128
+#define N 4000
 
 void die(char *s)
 {
@@ -28,30 +28,29 @@ int main(int argc, char **argv)
     struct sockaddr_in client_addr;
     socklen_t len = sizeof(struct sockaddr_in);
     int s = accept(ss, (struct sockaddr *)&client_addr, &len);
-    unsigned char c[N];
+    unsigned char c1[N];
+    unsigned char c2[N];
     int n, m;
-    FILE *play = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
+    //FILE *play = popen("play -t raw -b 16 -c 1 -e s -r 44100 -", "w");
     FILE *rec = popen("rec -t raw -b 16 -c 1 -e s -r 44100 -", "r");
-    // int start = 0;
     while (1)
     {
-        fread(c, 1, N, rec);
-        n = send(s, c, N, 0);
-        m = recv(s, c, N, 0);
-        fwrite(c, 1, N, play);
+        n = fread(c1, 1, N, rec);
         if (n == -1 || m == -1)
         {
-            /*        if (!start)
-            {
-                start |= 1;
-                continue;
-            }
-            else*/
+            break;
+        }
+        n = send(s, c1, n, 0);
+        m = recv(s, c2, N, 0);
+        // m = fwrite(c2, 1, m, play);
+        m = write(1, c2, m);
+        if (n == -1 || m == -1)
+        {
             break;
         }
     }
     pclose(rec);
-    pclose(play);
+    //pclose(play);
     close(s);
     close(ss);
     return 0;
